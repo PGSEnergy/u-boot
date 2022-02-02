@@ -26,7 +26,7 @@
 
 #ifdef CONFIG_SECURE_BOOT
 #ifndef CONFIG_CSF_SIZE
-#define CONFIG_CSF_SIZE 0x2000
+#define CONFIG_CSF_SIZE 0x4000
 #endif
 #endif
 
@@ -35,18 +35,15 @@
 
 #define CONFIG_MXC_UART_BASE		UART1_BASE
 
-/* Set to QSPI2 B flash at default */
-#define CONFIG_SYS_AUXCORE_BOOTDATA 0x78000000
-#define SF_QSPI2_B_CS_NUM 2
+#define CONFIG_SYS_AUXCORE_BOOTDATA 0x78000000 /* Set to QSPI2 B flash at default */
 
 /* When using M4 fastup demo, no need these M4 env, since QSPI is used by M4 */
 #ifndef CONFIG_SYS_AUXCORE_FASTUP
 #define UPDATE_M4_ENV \
 	"m4image=m4_qspi.bin\0" \
-	"m4_qspi_cs="__stringify(SF_QSPI2_B_CS_NUM)"\0" \
 	"loadm4image=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${m4image}\0" \
 	"update_m4_from_sd=" \
-		"if sf probe 1:${m4_qspi_cs}; then " \
+		"if sf probe 1:0; then " \
 			"if run loadm4image; then " \
 				"setexpr fw_sz ${filesize} + 0xffff; " \
 				"setexpr fw_sz ${fw_sz} / 0x10000; "	\
@@ -55,7 +52,7 @@
 				"sf write ${loadaddr} 0x0 ${filesize}; " \
 			"fi; " \
 		"fi\0" \
-	"m4boot=sf probe 1:${m4_qspi_cs}; bootaux "__stringify(CONFIG_SYS_AUXCORE_BOOTDATA)"\0"
+	"m4boot=sf probe 1:0; bootaux "__stringify(CONFIG_SYS_AUXCORE_BOOTDATA)"\0"
 #else
 #define UPDATE_M4_ENV ""
 #endif
@@ -91,15 +88,15 @@
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+        "silent=1\0" \
 	CONFIG_MFG_ENV_SETTINGS \
 	EA_IMX_PTP_ENV_SETTINGS \
-	UPDATE_M4_ENV \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx6sxea-com-kit_v2.dtb\0" \
+	"fdt_file=imx6sxea-com-kit_v2-m4.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
@@ -107,10 +104,11 @@
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
+        "run_m4_ddr=fatload mmc 1 0x9ff00000 M4ERPC.bin; dcache flush; bootaux 0x9ff00000\0" \
 	"mmcautodetect=yes\0" \
 	"fmac_txrx_opt=brcmfmac.sdio_wq_highpri=1\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot} ${fmac_txrx_opt} ${args_from_script}\0" \
+	"mmcargs=setenv bootargs quiet init=/kepm/rpmsg uart_from_osc console=${console},${baudrate} " \
+		"root=${mmcroot}\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
@@ -158,8 +156,7 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+	   "run run_m4_ddr; if mmc rescan; then " \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \
@@ -168,7 +165,7 @@
 			   "else run netboot; " \
 			   "fi; " \
 		   "fi; " \
-	   "else run netboot; fi"
+	    "else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_MEMTEST_START	0x80000000
@@ -176,8 +173,10 @@
 
 /* Physical Memory Map */
 #define CONFIG_NR_DRAM_BANKS		1
-#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
-#define PHYS_SDRAM_SIZE			SZ_1G
+/*#define PHYS_SDRAM			(MMDC0_ARB_BASE_ADDR + SZ_16M)*//*vf default just MMDC0_ARB_BASE_ADDR */
+/*#define PHYS_SDRAM_SIZE			(SZ_1G - SZ_16M)*//*vf default just SZ_1G */
+#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR/*vf default just MMDC0_ARB_BASE_ADDR */
+#define PHYS_SDRAM_SIZE			SZ_1G/*vf default just SZ_1G */
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
@@ -203,7 +202,7 @@
 /* MMC Configuration */
 #define CONFIG_SYS_FSL_USDHC_NUM	2
 #define CONFIG_SYS_MMC_ENV_DEV		0  /* USDHC3 / eMMC */
-#define CONFIG_SYS_MMC_ENV_PART		1  /* 0=user area, 1=1st MMC boot part., 2=2nd MMC boot part. */
+#define CONFIG_SYS_MMC_ENV_PART		0  /* user area */
 #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* USDHC3 / eMMC */
 
 #define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC3_BASE_ADDR
@@ -266,7 +265,7 @@
 
 #define CONFIG_ENV_SIZE			SZ_8K
 #if defined(CONFIG_ENV_IS_IN_MMC)
-#define CONFIG_ENV_OFFSET		(SZ_2M - CONFIG_ENV_SIZE)
+#define CONFIG_ENV_OFFSET		(8 * SZ_64K)
 #elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
 #define CONFIG_ENV_OFFSET		(768 * 1024)
 #define CONFIG_ENV_SECT_SIZE		(64 * 1024)
