@@ -26,7 +26,7 @@
 
 #ifdef CONFIG_SECURE_BOOT
 #ifndef CONFIG_CSF_SIZE
-#define CONFIG_CSF_SIZE 0x2000
+#define CONFIG_CSF_SIZE 0x4000
 #endif
 #endif
 
@@ -106,12 +106,13 @@
 		"rootfs part 0 2\0"\
 
 #ifdef CONFIG_TARGET_MX7DEA_COM
-#define FDT_FILE "imx7dea-com-kit_v2.dtb"
+#define FDT_FILE "imx7dea-com-kit_v2-m4.dtb"
 #else
 #define FDT_FILE "imx7dea-ucom-kit_v2.dtb"
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	"silent=1\0" \
 	EA_IMX_PTP_ENV_SETTINGS \
 	UPDATE_M4_ENV \
 	CONFIG_MFG_ENV_SETTINGS \
@@ -131,7 +132,7 @@
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
   "fmac_txrx_opt=brcmfmac.sdio_wq_highpri=1\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
+	"mmcargs=setenv bootargs  quiet init=/kepm/rpmsg uart_from_osc  console=${console},${baudrate} " \
 		"root=${mmcroot} ${fmac_txrx_opt} ${args_from_script}\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
@@ -180,8 +181,7 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
+	    "run run_m4_ddr; if mmc rescan; then " \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
 		   "else " \
@@ -201,8 +201,10 @@
 
 /* Physical Memory Map */
 #define CONFIG_NR_DRAM_BANKS		1
-#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
-#define PHYS_SDRAM_SIZE			SZ_1G
+// #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
+// #define PHYS_SDRAM_SIZE			SZ_1G
+#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR/*vf default just MMDC0_ARB_BASE_ADDR */
+#define PHYS_SDRAM_SIZE			SZ_1G/*vf default just SZ_1G */
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
@@ -230,7 +232,7 @@
 /* MMC Configuration */
 #define CONFIG_SYS_FSL_USDHC_NUM	2
 #define CONFIG_SYS_MMC_ENV_DEV		1  /* USDHC3/eMMC */
-#define CONFIG_SYS_MMC_ENV_PART		1  /* 0=user area, 1=1st MMC boot part., 2=2nd MMC boot part. */
+#define CONFIG_SYS_MMC_ENV_PART		0  /* 0=user area, 1=1st MMC boot part., 2=2nd MMC boot part. */
 #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* USDHC3/eMMC */
 
 #define CONFIG_SYS_FSL_ESDHC_ADDR	0
@@ -279,7 +281,7 @@
 #endif
 
 #define CONFIG_ENV_SIZE			SZ_8K
-#define CONFIG_ENV_OFFSET		(SZ_2M - CONFIG_ENV_SIZE)
+#define CONFIG_ENV_OFFSET		(8 * SZ_64K)
 /*#define CONFIG_ENV_OFFSET		(8 * SZ_64K)*/
 
 #if defined(CONFIG_ANDROID_SUPPORT)
