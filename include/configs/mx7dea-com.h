@@ -114,7 +114,6 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"silent=1\0" \
 	EA_IMX_PTP_ENV_SETTINGS \
-	UPDATE_M4_ENV \
 	CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_DFU_ENV_SETTINGS \
 	"script=boot.scr\0" \
@@ -130,6 +129,7 @@
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
+		"run_m4_ddr=fatload mmc 1 0x9ff00000 M4ERPC.bin; dcache flush; bootaux 0x9ff00000\0" \
 	"mmcautodetect=yes\0" \
   "fmac_txrx_opt=brcmfmac.sdio_wq_highpri=1\0" \
 	"mmcargs=setenv bootargs  quiet init=/kepm/rpmsg uart_from_osc  console=${console},${baudrate} " \
