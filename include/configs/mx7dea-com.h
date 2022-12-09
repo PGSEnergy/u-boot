@@ -105,12 +105,6 @@
 		"bootimg part 0 1;"\
 		"rootfs part 0 2\0"\
 
-#ifdef CONFIG_TARGET_MX7DEA_COM
-#define FDT_FILE "imx7dea-com-kit_v2-m4.dtb"
-#else
-#define FDT_FILE "imx7dea-ucom-kit_v2.dtb"
-#endif
-
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"silent=1\0" \
 	EA_IMX_PTP_ENV_SETTINGS \
@@ -121,7 +115,7 @@
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=" FDT_FILE "\0" \
+	"fdt_file=imx7dea-com-kit_v2-m4.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
